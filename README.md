@@ -1,6 +1,10 @@
+
 # Dynamic Forms Bundle for Symfony
 
-A powerful Symfony bundle that simplifies the creation of dynamic form fields with dependencies. This bundle leverages Symfony's form lifecycle events to provide seamless field dependency management without requiring JavaScript.
+[![CI](https://github.com/sauberdigital/dynamic-forms-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/sauberdigital/dynamic-forms-bundle/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+A powerful Symfony bundle that simplifies the creation of dynamic form fields with dependencies. This bundle leverages Symfony's form lifecycle events to provide seamless field dependency management **without JavaScript**.
 
 ## Features
 
@@ -8,14 +12,19 @@ A powerful Symfony bundle that simplifies the creation of dynamic form fields wi
 - **Multiple Dependencies**: Fields can depend on multiple parent fields
 - **Nested Dependencies**: Support for complex dependency chains (A → B → C → D)
 - **Circular Dependency Detection**: Prevents infinite loops in field dependencies
-- **Form Lifecycle Integration**: Uses Symfony's POST_SUBMIT events for optimal performance
+- **Form Lifecycle Integration**: Uses Symfony's `FormEvents::POST_SUBMIT` for optimal performance
 - **No JavaScript Required**: Works entirely through Symfony form events
 - **Type Safe**: Full PHP 8.2+ type hints and modern language features
+
+## Requirements
+
+- PHP **8.2+**
+- Symfony **7.2+**
 
 ## Installation
 
 ```bash
-composer require sd/dynamic-forms-bundle
+composer require sauberdigital/dynamic-forms-bundle
 ```
 
 If you're using Symfony Flex, the bundle will be automatically enabled. Otherwise, add the bundle to your `config/bundles.php`:
@@ -58,7 +67,7 @@ class LocationFormType extends AbstractType
                 'Europe' => 'EU',
             ],
             'data' => 'EU', // Set default value
-            'placeholder' => 'Select continent...',
+            'placeholder' => 'Select continent…',
         ]);
 
         // Country field depends on continent
@@ -183,6 +192,9 @@ class LocationFormType extends AbstractType
 
 use Sd\DynamicFormsBundle\Builder\DynamicFormBuilder;
 use Sd\DynamicFormsBundle\FieldDependency\DependentField;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\FormBuilderInterface;
 
 class ComplexLocationFormType extends AbstractType
 {
@@ -191,23 +203,23 @@ class ComplexLocationFormType extends AbstractType
         $builder = new DynamicFormBuilder($builder);
 
         // Continent field
-        $builder->add('continent', ChoiceType::class, [
+        $builder->add(name: 'continent', type: ChoiceType::class, options: [
             'choices' => ['North America' => 'NA', 'Europe' => 'EU'],
         ]);
 
         // Country depends on continent
         $builder->addDependentField(
-            'country',
-            'continent',
-            function (DependentField $field, array $data): void {
+            fieldName: 'country',
+            dependencies: 'continent',
+            callback: function (DependentField $field, array $data): void {
                 switch ($data['continent'] ?? null) {
                     case 'NA':
-                        $field->add(ChoiceType::class, [
+                        $field->add(type: ChoiceType::class, options: [
                             'choices' => ['USA' => 'US', 'Canada' => 'CA'],
                         ]);
                         break;
                     case 'EU':
-                        $field->add(ChoiceType::class, [
+                        $field->add(type: ChoiceType::class, options: [
                             'choices' => ['Germany' => 'DE', 'France' => 'FR'],
                         ]);
                         break;
@@ -217,22 +229,22 @@ class ComplexLocationFormType extends AbstractType
 
         // State depends on country
         $builder->addDependentField(
-            'state',
-            'country',
-            function (DependentField $field, array $data): void {
+            fieldName: 'state',
+            dependencies: 'country',
+            callback: function (DependentField $field, array $data): void {
                 switch ($data['country'] ?? null) {
                     case 'US':
-                        $field->add(ChoiceType::class, [
+                        $field->add(type: ChoiceType::class, options: [
                             'choices' => ['California' => 'CA', 'New York' => 'NY'],
                         ]);
                         break;
                     case 'CA':
-                        $field->add(ChoiceType::class, [
+                        $field->add(type: ChoiceType::class, options: [
                             'choices' => ['Ontario' => 'ON', 'Quebec' => 'QC'],
                         ]);
                         break;
                     case 'DE':
-                        $field->add(ChoiceType::class, [
+                        $field->add(type: ChoiceType::class, options: [
                             'choices' => ['Bavaria' => 'BY', 'Berlin' => 'BE'],
                         ]);
                         break;
@@ -242,16 +254,13 @@ class ComplexLocationFormType extends AbstractType
 
         // City depends on state
         $builder->addDependentField(
-            'city',
-            'state',
-            function (DependentField $field, array $data): void {
-                switch ($data['state'] ?? null) {
-                    case 'CA':
-                        $field->add(ChoiceType::class, [
-                            'choices' => ['Los Angeles' => 'LA', 'San Francisco' => 'SF'],
-                        ]);
-                        break;
-                    // ... more states
+            fieldName: 'city',
+            dependencies: 'state',
+            callback: function (DependentField $field, array $data): void {
+                if (($data['state'] ?? null) === 'CA') {
+                    $field->add(type: ChoiceType::class, options: [
+                        'choices' => ['Los Angeles' => 'LA', 'San Francisco' => 'SF'],
+                    ]);
                 }
             }
         );
@@ -266,14 +275,14 @@ class ComplexLocationFormType extends AbstractType
 
 // A field that depends on multiple parent fields
 $builder->addDependentField(
-    'shipping_options',
-    ['country', 'product_type'],
-    function (DependentField $field, array $data): void {
+    fieldName: 'shipping_options',
+    dependencies: ['country', 'product_type'],
+    callback: function (DependentField $field, array $data): void {
         $country = $data['country'] ?? null;
         $productType = $data['product_type'] ?? null;
 
         if ($country === 'US' && $productType === 'electronics') {
-            $field->add(ChoiceType::class, [
+            $field->add(type: ChoiceType::class, options: [
                 'choices' => [
                     'Standard (5-7 days)' => 'standard',
                     'Express (2-3 days)' => 'express',
@@ -281,7 +290,7 @@ $builder->addDependentField(
                 ],
             ]);
         } elseif ($country === 'US' && $productType === 'books') {
-            $field->add(ChoiceType::class, [
+            $field->add(type: ChoiceType::class, options: [
                 'choices' => [
                     'Standard (3-5 days)' => 'standard',
                     'Express (1-2 days)' => 'express',
@@ -298,12 +307,14 @@ $builder->addDependentField(
 ```php
 <?php
 
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+
 $builder->addDependentField(
-    'tax_id',
-    'customer_type',
-    function (DependentField $field, array $data): void {
+    fieldName: 'tax_id',
+    dependencies: 'customer_type',
+    callback: function (DependentField $field, array $data): void {
         if (($data['customer_type'] ?? null) === 'business') {
-            $field->add(TextType::class, [
+            $field->add(type: TextType::class, options: [
                 'label' => 'Tax ID',
                 'required' => true,
             ]);
@@ -324,6 +335,7 @@ This bundle works seamlessly with Symfony UX Live Components:
 ```php
 <?php
 
+use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
@@ -353,10 +365,10 @@ The bundle works with any Symfony form field type:
 <?php
 
 $builder->addDependentField(
-    'custom_field',
-    'trigger_field',
-    function (DependentField $field, array $data): void {
-        $field->add(CustomFieldType::class, [
+    fieldName: 'custom_field',
+    dependencies: 'trigger_field',
+    callback: function (DependentField $field, array $data): void {
+        $field->add(type: CustomFieldType::class, options: [
             'custom_option' => $data['trigger_field'] ?? 'default',
             'mapped' => false,
         ]);
@@ -364,9 +376,19 @@ $builder->addDependentField(
 );
 ```
 
+## No JS by default — but UX-friendly
+
+This bundle computes dependencies on the server using Symfony Form events. That means:
+
+- **Works without JavaScript**: changes are applied on submit with a full-page or partial reload.
+- **Progressive enhancement**: pair it with **Symfony UX Live Components** to re-render the form instantly on field changes — no custom JS needed.
+- **Bring your own frontend**: Stimulus, Turbo, htmx, Alpine, or classic AJAX all work — just re-submit or re-render the form when a dependency changes.
+
+**Recommended**: With Live Components, bind your form to a component (see example above). When a dependency field changes, the server recalculates dependent fields and updates the DOM. Users get instant feedback, and the form still works without JS.
+
 ## API Reference
 
-### DynamicFormBuilder
+### `DynamicFormBuilder`
 
 The main class for creating dynamic forms.
 
@@ -378,26 +400,23 @@ The main class for creating dynamic forms.
   - `$dependencies`: Single dependency or array of dependencies
   - `$callback`: Function that configures the field based on form data
 
-### DependentField
+### `DependentField`
 
 Represents a field that can be dynamically configured.
 
 #### Methods
 
-- `add(string $type, array $options = []): void`
-  - Add the field with specified type and options
-- `remove(): void`
-  - Remove the field from the form
-- `getName(): string`
-  - Get the field name
+- `add(string $type, array $options = []): void` – Add the field with specified type and options
+- `remove(): void` – Remove the field from the form
+- `getName(): string` – Get the field name
 
 ## How It Works
 
-1. **Field Registration**: When you call `addDependentField()`, the bundle registers a dependency relationship
-2. **Event Subscription**: POST_SUBMIT event listeners are attached to dependency fields
-3. **Dependency Processing**: When a dependency field changes, all dependent fields are recalculated
-4. **Field Updates**: Dependent fields are removed and re-added based on the callback logic
-5. **Circular Detection**: The dependency graph prevents circular dependencies
+1. **Field Registration**: When you call `addDependentField()`, the bundle registers a dependency relationship.
+2. **Event Subscription**: `POST_SUBMIT` event listeners are attached to dependency fields.
+3. **Dependency Processing**: When a dependency field changes, all dependent fields are recalculated.
+4. **Field Updates**: Dependent fields are removed and re-added based on the callback logic.
+5. **Circular Detection**: The dependency graph prevents circular dependencies.
 
 ## Error Handling
 
@@ -423,24 +442,15 @@ Run the test suite:
 vendor/bin/phpunit
 ```
 
-The bundle includes comprehensive unit and functional tests covering:
+The bundle includes unit and functional tests covering:
 - Field dependency logic
 - Circular dependency detection
 - Event handling
 - Form integration
 
-## Requirements
-
-- PHP 8.2+
-- Symfony 7.2+
-
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on branching, commit style, and the PR process.
 
 ## License
 
