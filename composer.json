@@ -13,6 +13,11 @@
     "dependent-fields"
   ],
   "license": "MIT",
+  "homepage": "https://github.com/sauberdigital/dynamic-forms-bundle",
+  "support": {
+    "issues": "https://github.com/sauberdigital/dynamic-forms-bundle/issues",
+    "source": "https://github.com/sauberdigital/dynamic-forms-bundle"
+  },
   "authors": [
     {
       "name": "sauber digital, David Schaller",
@@ -41,8 +46,9 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^10.5",
-    "symfony/validator": "^7.2",
-    "zenstruck/foundry": "*"
+    "symfony/validator": "^7.2"
   },
-  "minimum-stability": "stable"
+  "config": {
+    "sort-packages": true
+  }
 }
