@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Composer validate (if composer.json)
+        run: |
+          if [ -f composer.json ]; then composer validate --strict; else echo "no composer.json"; fi
+
+      - name: Install dependencies (if composer.json)
+        run: |
+          if [ -f composer.json ]; then composer install --no-interaction --no-progress --prefer-dist; else echo "skip install"; fi
+
+      - name: PHPUnit (if available)
+        run: |
+          if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always; else echo "phpunit not configured"; fi
+
+      - name: PHPStan (if available)
+        run: |
+          if [ -f vendor/bin/phpstan ]; then vendor/bin/phpstan analyse --no-progress; else echo "phpstan not configured"; fi
+
+      - name: PHP-CS-Fixer (dry-run, if available)
+        run: |
+          if [ -f vendor/bin/php-cs-fixer ]; then vendor/bin/php-cs-fixer fix --dry-run --diff; else echo "cs-fixer not configured"; fi
