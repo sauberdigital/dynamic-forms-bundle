@@ -13,10 +13,12 @@
     "dependent-fields"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/sauberdigital/dynamic-forms-bundle",
+  "homepage": "https://sauberdigital.de",
   "support": {
     "issues": "https://github.com/sauberdigital/dynamic-forms-bundle/issues",
-    "source": "https://github.com/sauberdigital/dynamic-forms-bundle"
+    "source": "https://github.com/sauberdigital/dynamic-forms-bundle/tree/main",
+    "docs": "https://github.com/sauberdigital/dynamic-forms-bundle#readme",
+    "security": "https://github.com/sauberdigital/dynamic-forms-bundle/security/policy"
   },
   "authors": [
     {
