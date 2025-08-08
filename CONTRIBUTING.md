@@ -1,11 +1,18 @@
 # Contributing
 
-Branch-Model: `main` (release) + `develop` (integration)
+This project uses `main` (release) + `develop` (integration). Please follow the process below.
 
-1) Fork → `git clone`
-2) `git remote add upstream git@github.com:sauberdigital/dynamic-forms-bundle.git`
-3) Feature-Branch: `git switch -c feature/<name> upstream/develop`
-4) Conventional Commits (`feat: ...`, `fix: ...`)
-5) PR-Target: `sauberdigital:develop` (Squash-Merge)
+## TL;DR
+1. Fork this repo and clone your fork.
+2. Add upstream: `git remote add upstream git@github.com:sauberdigital/dynamic-forms-bundle.git`
+3. Create a branch from the current integration branch:
+   `git switch -c feature/<name> upstream/develop` (or `fix/<name>`, `docs/<name>`, `chore/<name>`)
+4. Use Conventional Commits (`feat: ...`, `fix: ...`, `docs: ...`, `chore: ...`).
+5. Open a PR to **`sauberdigital:develop`**. CI must be green. Squash merge by maintainers.
 
-Hotfix: fork frmom `main` → PR on `main` → afterwards `main` back to `develop`.
+## Hotfixes
+- Branch from **`main`** → PR to **`main`** → after merge, back-merge `main` into `develop`.
+
+## Notes
+- Be respectful. (See `CODE_OF_CONDUCT.md` if present.)
+- License: MIT.
