@@ -1,0 +1,62 @@
+name: "Bug report"
+description: "Report a reproducible bug"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Please confirm
+      options:
+        - label: I've searched existing issues
+          required: true
+        - label: I’m using the latest release (or tried it)
+          required: false
+  - type: input
+    attributes:
+      label: Package version
+      description: sauberdigital/dynamic-forms-bundle version (e.g. 1.0.0)
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: PHP version
+      placeholder: 8.2.20
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Symfony version
+      placeholder: 7.2.x
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Used with
+      options:
+        - Plain Symfony Forms (no JS)
+        - Symfony UX Live Components
+        - Stimulus/Turbo
+        - Other
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+      description: Exact steps / form definitions to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behavior / stacktrace
+      render: shell
+  - type: textarea
+    attributes:
+      label: Minimal reproducer (repo/gist)
+      description: Link to a minimal repository or code sample
