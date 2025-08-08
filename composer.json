@@ -48,6 +48,11 @@
     "phpunit/phpunit": "^10.5",
     "symfony/validator": "^7.2"
   },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.x-dev"
+    }
+  },
   "config": {
     "sort-packages": true
   }
