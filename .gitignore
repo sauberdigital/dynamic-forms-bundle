@@ -1,0 +1,13 @@
+# System files
+.DS_Store
+
+# IDE and editor files
+.idea/
+
+# Composer dependencies
+vendor/
+composer.lock
+
+# PHPUnit and testing
+phpunit.xml
+.phpunit.result.cache
