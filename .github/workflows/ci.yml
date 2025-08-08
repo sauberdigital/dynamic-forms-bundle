@@ -3,6 +3,15 @@ name: CI
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'CHANGELOG*'
+      - 'LICENSE*'
+      - '.gitattributes'
+      - '.editorconfig'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
   pull_request:
     branches: [ main, develop ]
 
@@ -23,13 +32,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Detect code changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'composer.json'
+              - 'composer.lock'
+              - 'phpunit.xml*'
+              - 'phpstan.neon*'
+              - '.php-cs-fixer.php'
+              - 'tests/**'
+              - '.github/workflows/**'
+
       - uses: shivammathur/setup-php@v2
+        if: steps.changes.outputs.code == 'true'
         with:
           php-version: ${{ matrix.php }}
           tools: composer:v2
           coverage: none
 
       - name: Cache Composer
+        if: steps.changes.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache/files
@@ -38,10 +64,12 @@ jobs:
             ${{ runner.os }}-php${{ matrix.php }}-deps${{ matrix.deps }}-
 
       - name: Validate composer (if composer.json)
+        if: steps.changes.outputs.code == 'true'
         run: |
           if [ -f composer.json ]; then composer validate --strict; else echo "no composer.json"; fi
 
       - name: Install ${{ matrix.deps }} dependencies (if composer.json)
+        if: steps.changes.outputs.code == 'true'
         run: |
           if [ -f composer.json ]; then
             if [ "${{ matrix.deps }}" = "lowest" ]; then
@@ -54,13 +82,16 @@ jobs:
           fi
 
       - name: PHPUnit (if available)
+        if: steps.changes.outputs.code == 'true'
         run: |
           if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always; else echo "phpunit not configured"; fi
 
       - name: PHPStan (if available)
+        if: steps.changes.outputs.code == 'true'
         run: |
           if [ -f vendor/bin/phpstan ]; then vendor/bin/phpstan analyse --no-progress; else echo "phpstan not configured"; fi
 
       - name: PHP-CS-Fixer (dry-run, if available)
+        if: steps.changes.outputs.code == 'true'
         run: |
           if [ -f vendor/bin/php-cs-fixer ]; then vendor/bin/php-cs-fixer fix --dry-run --diff; else echo "cs-fixer not configured"; fi
