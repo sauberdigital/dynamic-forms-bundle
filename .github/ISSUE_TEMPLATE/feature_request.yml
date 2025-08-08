@@ -1,0 +1,23 @@
+name: "Feature request"
+description: "Propose an enhancement"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: Problem / use case
+      placeholder: What are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed solution / API sketch
+      placeholder: Show example code or configuration
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    attributes:
+      label: Additional context
