@@ -14,6 +14,8 @@ namespace Sd\DynamicFormsBundle\FieldDependency\Manager;
 use Closure;
 use Sd\DynamicFormsBundle\FieldDependency\DependentField\DependentFieldConfig;
 use Sd\DynamicFormsBundle\FieldDependency\EventHandler\DependencyEventHandler;
+use Sd\DynamicFormsBundle\FieldDependency\Validator\DependencyGraphValidator;
+use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\FormBuilderInterface;
 
 /**
@@ -27,6 +29,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 final class FieldDependencyManager
 {
     private DependencyEventHandler $eventHandler;
+    private DependencyGraphValidator $graphValidator;
 
     /**
      * @param FormBuilderInterface $formBuilder The form builder to manage dependencies for
@@ -34,6 +37,7 @@ final class FieldDependencyManager
     public function __construct(FormBuilderInterface $formBuilder)
     {
         $this->eventHandler = new DependencyEventHandler($formBuilder);
+        $this->graphValidator = new DependencyGraphValidator();
     }
 
     /**
@@ -42,11 +46,23 @@ final class FieldDependencyManager
      * @param string $fieldName The name of the dependent field
      * @param string|array<string> $dependencies Single dependency or array of field names this field depends on
      * @param Closure $callback Callback that configures the field based on dependency data
+     * 
+     * @throws LogicException If adding this field would create a circular dependency
      */
     public function addDependentField(string $fieldName, string|array $dependencies, Closure $callback): self
     {
         // make sure, $dependencies is an array
         $dependencies = (array) $dependencies;
+        
+        // Add to dependency graph and check for cycles
+        $this->graphValidator->addEdge($fieldName, $dependencies);
+        
+        if ($cyclePath = $this->graphValidator->detectCycle()) {
+            throw new LogicException(sprintf(
+                'Circular dependency detected: %s',
+                implode(' → ', $cyclePath)
+            ));
+        }
         
         // Register the configuration
         $config = new DependentFieldConfig(name: $fieldName, dependencies: $dependencies, callback: $callback);
